@@ -1,7 +1,7 @@
 from socket import *
 import psutil
 import json
-from time import sleep
+import threading
 
 class Client:
     def __init__(self,ip,port):
@@ -16,7 +16,7 @@ class Client:
             exit()
         if msg == 'connected!':
             print(msg)
-            self.listen()
+            self.start()
         else:
             exit()
     def sender(self,text):
@@ -24,15 +24,31 @@ class Client:
         while self.client.recv(1024).decode('utf-8')!='getted':
             self.client.send(text.encode('utf-8'))
 
+    def PCdata(self):
+        while True:
+            cpu = int(psutil.cpu_percent(interval=2))
+            username = psutil.users()
+            memory = psutil.virtual_memory()
+            indicators = json.dumps(
+                {
+                    'CPU': cpu,
+                    'Memory': memory[2],
+                    'User': username[0][0]
+                }
+            )
+            self.sender(indicators)
+
+
     def listen(self):
-        is_work = True
-        while is_work:
-            cpu = psutil.cpu_percent(interval=2)
-            cpu = json.dumps(
-               {'CPU':cpu}
-           )
-            print(cpu)
-            self.sender(cpu)
-            sleep(2)
+        while True:
+            message = input(':')
+            self.sender(message)
+
+    def start(self):
+        thr1 = threading.Thread(target=Client.PCdata(self), daemon=True, name='PCData')
+        thr2 = threading.Thread(target=Client.listen(self), daemon=True, name='Listen')
+        thr1.start()
+        thr2.start()
+
 
 Client(input('type server ip: '), 6543).connect()

@@ -1,5 +1,10 @@
 from socket import *
 import json
+from colorama import init, Style, Back
+import threading
+
+
+init(autoreset=True)
 
 class Server:
     def __init__(self,ip,port):
@@ -39,8 +44,17 @@ class Server:
                     print('Client disconnected')
                     is_work == False
                 else:
-                    message = json.loads(message)
-                    print(f'{addr[0]} Загрузка ЦП: {message}')
+                    if 'CPU' in message:
+                        message = json.loads(message)
+                        if message['CPU'] < 50:
+                            print(f"{addr[0]} Загрузка ЦП: {Back.GREEN}{message['CPU']}%{Style.RESET_ALL}\n\t Загрузка ОЗУ: {message['Memory']}\n\t Имя ПК: {message['User']}")
+                        elif message['CPU'] > 50 and message['CPU'] < 80:
+                            print(f"{addr[0]} Загрузка ЦП: {Back.YELLOW}{message['CPU']}%{Style.RESET_ALL}\n\t Загрузка ОЗУ: {message['Memory']}\n\t Имя ПК: {message['User']}")
+                        else:
+                            print(f"{addr[0]} Загрузка ЦП: {Back.RED}{message['CPU']}%{Style.RESET_ALL}\n\t Загрузка ОЗУ: {message['Memory']}\n\t Имя ПК: {message['User']}")
+                    else:
+                        print(message)
+
             else:
                 print('Client disconnected')
                 is_work = False
